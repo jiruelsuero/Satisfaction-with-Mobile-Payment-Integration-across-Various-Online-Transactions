@@ -1,0 +1,346 @@
+---
+title: "Satisfaction-with-Mobile-Payment-Integration-across-Various-Online-Transactions"
+author: "Suero, Huervana, Ahumada"
+date: "2024-04-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+data <- read_csv("Suero_Huervana_Ahumada/CSV FILES/Survey.csv")
+
+str(data)
+summary(data)
+
+head(data)
+tail(data)
+
+
+```
+############################## DEMOGRAPHICS ##############################
+
+AGE
+```{r}
+# Convert Age column to numeric
+data <- data %>%
+  mutate(Age = as.numeric(Age))
+
+# Remove NA values in Age column
+cleaned_data <- data %>%
+  filter(!is.na(Age))
+
+# Count and arrange the frequencies of ages
+age_counts <- cleaned_data %>%
+  count(Age) %>%
+  arrange(Age)
+
+
+age_plot <- ggplot(age_counts, aes(x = Age, y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  labs(title = "Age frequency",
+       x = "Age",
+       y = "Frequency")+
+  theme_minimal()
+
+
+#ggsave("age_distribution_plot.png", plot = age_plot, width = 8, height = 6, dpi = 300)
+
+
+```
+
+GENDER
+```{r}
+
+library(dplyr)
+
+# Replace "Gay" with "Others" in the Gender column
+data <- data %>%
+  mutate(Gender = ifelse(Gender == "Gay", "Others", Gender))
+
+
+gender_freq <- data %>%
+  count(Gender) %>%
+  arrange(Gender)
+gender_freq
+
+
+gender_plot <- ggplot(gender_freq, aes(x = Gender, y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Gender Frequency",
+       x = "Gender",
+       y = "Frequency") +
+  geom_text(aes(label = n), vjust = -0.5, size = 3) +
+  theme_minimal()
+
+
+##ggsave("gender_frequency_plot.png", plot = gender_plot, width = 8, height = 6)
+
+
+```
+
+OCCUPATION
+```{r}
+
+library(dplyr)
+
+# Define valid occupations
+valid_occupations <- c("Student", "Employed", "Unemployed", "Self Employed")
+
+# Replace invalid occupations with "Others" in the Occupation column
+data <- data %>%
+  mutate(Occupation = ifelse(!(Occupation %in% valid_occupations), "Others", Occupation))
+
+
+occupation_freq <- data %>%
+  count(Occupation) %>%
+  arrange(Occupation)
+
+
+occupation_plot <- ggplot(occupation_freq, aes(x = Occupation, y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Occupation Frequency",
+       x = "Occupation",
+       y = "Frequency") +
+  geom_text(aes(label = n), vjust = -0.5, size = 3) +
+  theme_minimal()
+
+
+#ggsave("occupation_frequency_plot.png", plot = occupation_plot, width = 8, height = 6)
+
+
+```
+
+ONLINE PAYMENT METHOD OR PLATFORM THEY USE
+```{r}
+
+payment_method_count <-data %>%
+  count(`Which online payment method or platform do you primarily use for making purchases?`)
+
+
+for (i in 1:nrow(payment_method_count)) {
+  print(paste("The total number of individuals who primarily use", payment_method_count[i, "Which online payment method or platform do you primarily use for making purchases?"], "is:", payment_method_count[i, "n"]))
+}
+
+# Replace "secret" with "others"
+data <- data %>%
+  mutate(`Which online payment method or platform do you primarily use for making purchases?` = ifelse(`Which online payment method or platform do you primarily use for making purchases?` == "secret", "others", `Which online payment method or platform do you primarily use for making purchases?`))
+
+payment_method_count <- data %>%
+  count(`Which online payment method or platform do you primarily use for making purchases?`) %>%
+  arrange(desc(n))
+
+payment_method_plot <- ggplot(payment_method_count, aes(x = `Which online payment method or platform do you primarily use for making purchases?`, y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Payment Method Frequency",
+       x = "Payment Method",
+       y = "Frequency") +
+  geom_text(aes(label = n), vjust = -0.5, size = 3) +
+  theme_minimal()
+
+
+#ggsave("payment_method_frequency_plot.png", plot = payment_method_plot, width = 8, height = 6)
+
+```
+
+
+HOW OFTEN AN INDIVIDUAL USE ONLINE PAYMENT
+```{r}
+
+payment_frequency_count <- data %>%
+  count(`How often do you use online payment for making purchases?`)
+
+
+for (i in 1:nrow(payment_frequency_count)) {
+  print(paste("The total number of individuals who use online payment", payment_frequency_count[i, "How often do you use online payment for making purchases?"], "is:", payment_frequency_count[i, "n"]))
+}
+
+
+# Replace invalid frequency categories with "Others"
+data <- data %>%
+  mutate(`How often do you use online payment for making purchases?` = 
+           case_when(
+             `How often do you use online payment for making purchases?` %in% c("2-3 times a week", "4-6 times a week", "Daily", "Multiple times a day", "Once a week", "Rarely (Less than once a month)") ~ `How often do you use online payment for making purchases?`,
+             TRUE ~ "Others"
+           )
+  )
+
+
+payment_frequency_count <- data %>%
+  count(`How often do you use online payment for making purchases?`) %>%
+  arrange(desc(n))
+
+
+payment_frequency_plot <- ggplot(payment_frequency_count, aes(x = `How often do you use online payment for making purchases?`, y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Payment Frequency Frequency",
+       x = "Payment Frequency",
+       y = "Frequency") +
+  geom_text(aes(label = n), vjust = -0.5, size = 3) +
+  theme_minimal()
+
+
+#ggsave("payment_frequency_plot.png", plot = payment_frequency_plot, width = 8, height = 6)
+
+
+```
+
+
+
+
+############################## DETERMINANTS ##############################
+
+CHANGING "Strong Disagree to "Strongly Disagree" (Error in making the survey)
+```{r}
+
+
+changed_data <- data
+
+# Iterate through each row and replace "Strong Disagree" with "Strongly Disagree"
+for (i in 1:nrow(changed_data)) {
+  changed_data[i, ] <- lapply(changed_data[i, ], function(x) ifelse(x == "Strong Disagree", "Strongly Disagree", x))
+}
+
+# Print the updated dataframe
+print(changed_data)
+
+# Write changed_data to a CSV file
+write_csv(changed_data, "changed_data.csv")
+
+
+```
+
+
+```{r}
+
+question_columns <- c("PE1", "PE2", "PE3", "EE1", "EE2", "EE3", "AUT1", "AUT2", "AUT3", "AUT4", "SI1", "SI2", "FC1", "FC2", "FC3", "FC4","SE1", "SE2", "SE3", "A1", "A2", "A3", "A4")
+
+```
+
+CHANGING QUESTIONS TO FACTOR
+```{r}
+
+for (column_name in question_columns) {
+  changed_data[[column_name]] <- factor(changed_data[[column_name]],
+                              levels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"),
+                              ordered = TRUE)
+}
+
+```
+
+SEPARATING THE DEMOGRAPHICS AND DETERMINANTS
+```{r}
+
+demographic_cols <- c("Timestamp", "Email Address" ,"Score","Name", "Age", "Gender","Occupation","Address","Contact Number(Optional)", "Which online payment method or platform do you primarily use for making purchases?", "How often do you use online payment for making purchases?")
+demographics <- changed_data %>% 
+  select(all_of(demographic_cols))
+
+demographic_cols
+
+determinant_cols <- setdiff(names(changed_data), demographic_cols)
+determinants <- changed_data %>% 
+  select(all_of(determinant_cols))
+
+determinant_cols
+
+```
+
+MAPPING EACH QUESTION TO ITS CORRESPONDING CATEGORY
+```{r}
+
+category_map <- list(
+  "Performance Expectancy" = c("PE1", "PE2", "PE3"),
+  "Effort Expectancy" = c("EE1", "EE2", "EE3"),
+  "Attitude toward using technology" = c("AUT1", "AUT2", "AUT3", "AUT4"),
+  "Social influence" = c("SI1", "SI2"),
+  "Facilitating Conditions" = c("FC1", "FC2", "FC3", "FC4"),
+  "Self-Efficacy" = c("SE1", "SE2", "SE3"),
+  "Anxiety" = c("A1", "A2", "A3", "A4")
+)
+
+category_df <- stack(category_map)
+colnames(category_df) <- c("question", "category")
+
+```
+
+
+CONVERT TO NUMERIC AND CALCULATE MEANS
+CONVERT TO NUMERIC AND CALCULATE STANDARD DEVIATIONS
+COMBINE MEANS, STANDARD DEVIATIONS, AND CATEGORIES
+```{r}
+
+determinants_means <- determinants %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise_all(.funs = mean) %>% 
+  pivot_longer(cols = everything(), names_to = "question", values_to = "mean")
+
+determinants_sds <- determinants %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise_all(.funs = sd) %>% 
+  pivot_longer(cols = everything(), names_to = "question", values_to = "sd")
+
+
+determinant_summary <- determinants_means %>%
+  inner_join(determinants_sds, by = "question") %>%
+  inner_join(category_df, by = "question")
+
+determinant_summary
+
+```
+
+COMBINE MEANS AND STANDARD DEVIATIONS BY CATEGORY
+```{r}
+
+determinant_mean_by_category <- aggregate(mean ~ category, determinant_summary, mean)
+determinant_sd_by_category <- aggregate(sd ~ category, determinant_summary, sd)
+
+determinant_summary_by_category <- determinant_mean_by_category %>%
+  inner_join(determinant_sd_by_category, by= "category")
+
+determinant_summary_by_category
+
+write.csv(determinant_summary_by_category, "determinantMeanSd.csv")
+
+```
+
+
+PLOTTING DETERMINANTS
+```{r}
+determinant_mean_sd <- read_csv("Suero_Huervana_Ahumada/CSV FILES/determinantMeanSd.csv")
+
+# Define custom colors
+my_colors <- c("Performance Expectancy" = "#FF6F61",
+               "Effort Expectancy" = "#6B5B95",
+               "Attitude toward using technology" = "#88B04B",
+               "Social influence" = "#F7CAC9",
+               "Facilitating Conditions" = "#92A8D1",
+               "Self-Efficacy" = "#955251",
+               "Anxiety" = "#FFA600")
+
+# Plotting
+determinant_plot <- ggplot(determinant_mean_sd, aes(x = category, y = mean, fill = category)) +
+  geom_bar(stat = 'identity', color = "black") +
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.4, position = position_dodge(0.9)) +
+  labs(title = "Mean with Standard Deviation",
+       x = "Category",
+       y = "Mean") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +  # Remove legend
+  scale_fill_manual(values = my_colors)  # Apply custom colors
+
+
+#ggsave("determinant_mean_sd.png", plot = determinant_plot, width = 10, height = 6, dpi = 300)
+
+
+determinant_plot
+
+```
